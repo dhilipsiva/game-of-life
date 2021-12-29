@@ -24,34 +24,43 @@ fn get_neighbours(
     row_index: usize,
     col_index: usize,
 ) -> Neighbours {
-    let (row_curr, mut row_next) = (row_index, row_index + 1);
-    let (col_curr, mut col_next) = (col_index, col_index + 1);
-    let (mut row_prev, mut col_prev): (usize, usize);
-    if row_index > 0 {
-        row_prev = row_index - 1
-    } else {
-        row_prev = row_len - 1;
-    }
+    // Compute next row
+    let mut row_next = row_index + 1;
     if row_next == row_len {
         row_next = 0;
     }
-    if col_index > 0 {
-        col_prev = col_index - 1;
-    } else {
-        col_prev = col_len - 1;
-    }
+
+    // Compute next col
+    let mut col_next = col_index + 1;
     if col_next == col_len {
         col_next = 0;
     }
+
+    // Compute previous row
+    let row_prev: usize;
+    if row_index == 0 {
+        row_prev = row_len - 1;
+    } else {
+        row_prev = row_index - 1
+    }
+
+    // Compute previous col
+    let col_prev: usize;
+    if col_index == 0 {
+        col_prev = col_len - 1;
+    } else {
+        col_prev = col_index - 1;
+    }
+
     return vec![
-        (row_prev, col_prev), // top left
-        (row_prev, col_curr), // top center
-        (row_prev, col_next), // top right
-        (row_curr, col_prev), // left
-        (row_curr, col_next), // right
-        (row_next, col_prev), // down left
-        (row_next, col_curr), // down center
-        (row_next, col_next), // down right
+        (row_prev, col_prev),  // top left
+        (row_prev, col_index), // top center
+        (row_prev, col_next),  // top right
+        (row_index, col_prev), // left
+        (row_index, col_next), // right
+        (row_next, col_prev),  // down left
+        (row_next, col_index), // down center
+        (row_next, col_next),  // down right
     ];
 }
 
@@ -103,8 +112,8 @@ fn print_vec(state: &StateMatrix) {
 }
 
 fn main() {
-    let row: usize = 50;
-    let col: usize = 50;
+    let row: usize = 10;
+    let col: usize = 100;
     let mut state: StateMatrix = seed_state(row, col);
     loop {
         print_vec(&state);
