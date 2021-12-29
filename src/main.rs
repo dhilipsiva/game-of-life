@@ -3,7 +3,8 @@ use std::time::Duration;
 use std::vec::Vec;
 
 type StateMatrix = Vec<Vec<bool>>;
-type MatrixBound = (usize, usize, usize, usize);
+type Cell = (usize, usize);
+type Neighbours = Vec<Cell>;
 
 fn seed_state(row: usize, col: usize) -> StateMatrix {
     let mut state = Vec::with_capacity(row);
@@ -17,22 +18,41 @@ fn seed_state(row: usize, col: usize) -> StateMatrix {
     return state;
 }
 
-fn get_bounds(row_len: usize, col_len: usize, row_index: usize, col_index: usize) -> MatrixBound {
-    let (mut row_start, mut row_end, mut col_start, mut col_end): MatrixBound =
-        (row_index, row_index, col_index, col_index);
+fn get_neighbours(
+    row_len: usize,
+    col_len: usize,
+    row_index: usize,
+    col_index: usize,
+) -> Neighbours {
+    let (row_curr, mut row_next) = (row_index, row_index + 1);
+    let (col_curr, mut col_next) = (col_index, col_index + 1);
+    let (mut row_prev, mut col_prev): (usize, usize);
     if row_index > 0 {
-        row_start -= 1;
+        row_prev = row_index - 1
+    } else {
+        row_prev = row_len - 1;
+    }
+    if row_next == row_len {
+        row_next = 0;
     }
     if col_index > 0 {
-        col_start -= 1;
+        col_prev = col_index - 1;
+    } else {
+        col_prev = col_len - 1;
     }
-    if row_index < (row_len - 1) {
-        row_end += 1;
+    if col_next == col_len {
+        col_next = 0;
     }
-    if col_index < (col_len - 1) {
-        col_end += 1;
-    }
-    return (row_start, row_end, col_start, col_end);
+    return vec![
+        (row_prev, col_prev), // top left
+        (row_prev, col_curr), // top center
+        (row_prev, col_next), // top right
+        (row_curr, col_prev), // left
+        (row_curr, col_next), // right
+        (row_next, col_prev), // down left
+        (row_next, col_curr), // down center
+        (row_next, col_next), // down right
+    ];
 }
 
 fn tick(state: StateMatrix) -> StateMatrix {
@@ -44,19 +64,13 @@ fn tick(state: StateMatrix) -> StateMatrix {
         for col_index in 0..col {
             let mut is_alive = state[row_index][col_index];
             let mut living_neighbours_count = 0;
-            let (row_start, row_end, col_start, col_end) =
-                get_bounds(row, col, row_index, col_index);
-            // Count the live neighbours + current cell
-            for row_neighbour in row_start..row_end + 1 {
-                for col_neignbour in col_start..col_end + 1 {
-                    if state[row_neighbour][col_neignbour] {
-                        living_neighbours_count += 1;
-                    }
+            let neighbours = get_neighbours(row, col, row_index, col_index);
+            for neighbour in neighbours {
+                if state[neighbour.0][neighbour.1] {
+                    living_neighbours_count += 1;
                 }
             }
             if is_alive {
-                // if current cell is alive, remove it from count
-                living_neighbours_count -= 1;
                 if (living_neighbours_count < 2) | (living_neighbours_count > 3) {
                     is_alive = false;
                 }
